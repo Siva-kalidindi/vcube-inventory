@@ -5,6 +5,7 @@ import com.vcube.inventory.entity.Supplier;
 import com.vcube.inventory.repository.SupplierRepository;
 import com.vcube.inventory.service.PurchaseOrderService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -49,6 +50,7 @@ public class PurchaseOrderController {
     }
 
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<PurchaseOrder> updateStatus(
             @PathVariable Long id,
             @RequestBody Map<String, String> body) {
@@ -58,6 +60,7 @@ public class PurchaseOrderController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id) {
         purchaseOrderService.deleteOrder(id);
         return ResponseEntity.noContent().build();

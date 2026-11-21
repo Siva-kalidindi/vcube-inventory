@@ -24,8 +24,12 @@ import {
 } from '../api/orders';
 import { getSuppliers } from '../api/suppliers';
 import { getProducts } from '../api/products';
+import { useAuth } from '../context/AuthContext';
 
 export const Orders = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'ADMIN';
+
   const [orders, setOrders] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
@@ -318,16 +322,20 @@ export const Orders = () => {
                         {po.notes || 'Standard procurement order'}
                       </td>
                       <td className="px-6 py-4 text-right">
-                        <select
-                          value={po.status || 'PENDING'}
-                          onChange={(e) => handleStatusChange(po.id, e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-semibold text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer"
-                        >
-                          <option value="PENDING">PENDING</option>
-                          <option value="APPROVED">APPROVED</option>
-                          <option value="RECEIVED">RECEIVED</option>
-                          <option value="CANCELLED">CANCELLED</option>
-                        </select>
+                        {isAdmin ? (
+                          <select
+                            value={po.status || 'PENDING'}
+                            onChange={(e) => handleStatusChange(po.id, e.target.value)}
+                            className="px-2.5 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-semibold text-slate-300 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                          >
+                            <option value="PENDING">PENDING</option>
+                            <option value="APPROVED">APPROVED</option>
+                            <option value="RECEIVED">RECEIVED</option>
+                            <option value="CANCELLED">CANCELLED</option>
+                          </select>
+                        ) : (
+                          <span className="text-[10px] text-slate-500 font-mono">Admin Action Only</span>
+                        )}
                       </td>
                     </tr>
                   ))
