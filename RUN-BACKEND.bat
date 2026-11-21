@@ -1,6 +1,6 @@
 @echo off
 echo ============================================================
-echo   STARTING SPRING BOOT INVENTORY APPLICATION...
+echo   BUILDING AND STARTING LATEST INVENTORY BACKEND...
 echo ============================================================
 echo.
 
@@ -9,8 +9,8 @@ set "PATH=%MAVEN_HOME%\bin;%PATH%"
 
 cd "%~dp0backend"
 
-echo [1/2] Building latest backend JAR...
-call mvn package -DskipTests
+echo [1/2] Compiling fresh code into JAR...
+call mvn clean package -DskipTests
 
 echo.
 echo [2/2] Launching server on http://localhost:8080 ...

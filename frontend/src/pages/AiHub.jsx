@@ -25,7 +25,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  ResponsiveContainer
+  ResponsiveContainer,
+  ReferenceLine
 } from 'recharts';
 import {
   queryAiAnalytics,
@@ -156,13 +157,18 @@ export const AiHub = () => {
     }
   };
 
-  // Mock forecast projection trend chart
+  // Dynamic forecast trajectory calculation based on REAL selected product
+  const selectedProduct = products.find((p) => String(p.id) === String(selectedProductId));
+  const currentQty = selectedProduct ? selectedProduct.quantity : 50;
+  const reorderThreshold = selectedProduct ? selectedProduct.reorderLevel : 10;
+  const burnRate = Math.max(1, Math.round((currentQty * 0.8) / 4));
+
   const projectionChartData = [
-    { day: 'Day 1', baseline: 100, projectedDemand: 95 },
-    { day: `Day ${Math.round(forecastDays * 0.25)}`, baseline: 90, projectedDemand: 82 },
-    { day: `Day ${Math.round(forecastDays * 0.5)}`, baseline: 80, projectedDemand: 68 },
-    { day: `Day ${Math.round(forecastDays * 0.75)}`, baseline: 70, projectedDemand: 45 },
-    { day: `Day ${forecastDays}`, baseline: 60, projectedDemand: 22 },
+    { day: 'Today', remainingStock: currentQty, reorderLevel: reorderThreshold },
+    { day: `Day ${Math.max(2, Math.round(forecastDays * 0.25))}`, remainingStock: Math.max(0, currentQty - burnRate), reorderLevel: reorderThreshold },
+    { day: `Day ${Math.max(5, Math.round(forecastDays * 0.5))}`, remainingStock: Math.max(0, currentQty - burnRate * 2), reorderLevel: reorderThreshold },
+    { day: `Day ${Math.max(10, Math.round(forecastDays * 0.75))}`, remainingStock: Math.max(0, currentQty - burnRate * 3), reorderLevel: reorderThreshold },
+    { day: `Day ${forecastDays}`, remainingStock: Math.max(0, currentQty - burnRate * 4), reorderLevel: reorderThreshold }
   ];
 
   return (
@@ -222,7 +228,7 @@ export const AiHub = () => {
           }`}
         >
           <DollarSign className="w-4 h-4" />
-          <span>3. Purchase Recommender</span>
+          <span>3. Purchase Advisor</span>
         </button>
 
         <button
@@ -318,8 +324,8 @@ export const AiHub = () => {
           <div className="px-6 py-2.5 bg-slate-950/40 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto">
             <span className="text-[11px] font-medium text-slate-500 flex-shrink-0">Try asking:</span>
             {[
+              'What items are selling fast?',
               'Which products are running low?',
-              'What items should I restock immediately?',
               'Summarize warehouse holding value',
               'Which suppliers have fastest fulfillment?'
             ].map((suggestion, idx) => (
@@ -361,23 +367,25 @@ export const AiHub = () => {
           {/* Controls Column */}
           <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-6 flex flex-col justify-between">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <TrendingUp className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-base font-bold text-white">Demand Forecast Setup</h3>
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <TrendingUp className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Demand Forecaster</h3>
+                  <p className="text-[11px] text-slate-400">Grounded in SQL transactions</p>
+                </div>
               </div>
-              <p className="text-xs text-slate-400 mb-6">
-                Predict consumption patterns, stockout risk dates, and buffer safety stock recommendations.
-              </p>
 
               <form onSubmit={handleGenerateForecast} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
-                    Target SKU / Product
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Select Target Product
                   </label>
                   <select
                     value={selectedProductId}
                     onChange={(e) => setSelectedProductId(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    className="w-full px-3 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-indigo-500"
                   >
                     {products.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -388,26 +396,43 @@ export const AiHub = () => {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
-                    Forecast Timeline Horizon
+                  <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                    Forecast Horizon
                   </label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {[7, 15, 30, 60].map((days) => (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[15, 30, 60].map((days) => (
                       <button
                         key={days}
                         type="button"
                         onClick={() => setForecastDays(days)}
-                        className={`py-2 rounded-xl text-xs font-bold transition-all border ${
+                        className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
                           forecastDays === days
-                            ? 'bg-indigo-600 border-indigo-400 text-white'
+                            ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30'
                             : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-white'
                         }`}
                       >
-                        {days}d
+                        {days} Days
                       </button>
                     ))}
                   </div>
                 </div>
+
+                {selectedProduct && (
+                  <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 text-[11px] space-y-1.5">
+                    <div className="flex justify-between text-slate-400">
+                      <span>Current Warehouse Stock:</span>
+                      <span className="font-bold text-white">{selectedProduct.quantity} units</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Safety Reorder Level:</span>
+                      <span className="font-bold text-amber-400">{selectedProduct.reorderLevel} units</span>
+                    </div>
+                    <div className="flex justify-between text-slate-400">
+                      <span>Unit Value:</span>
+                      <span className="font-bold text-emerald-400">${selectedProduct.price}</span>
+                    </div>
+                  </div>
+                )}
 
                 <button
                   type="submit"
@@ -437,7 +462,7 @@ export const AiHub = () => {
             <div>
               <h3 className="text-base font-bold text-white mb-1 flex items-center gap-2">
                 <BarChart3 className="w-4 h-4 text-indigo-400" />
-                Projected Trajectory & Restock Recommendation
+                Projected Trajectory & Restock Recommendation ({selectedProduct ? selectedProduct.name : 'Loading...'})
               </h3>
               <p className="text-xs text-slate-400 mb-6">Simulation model based on current velocity and lead times</p>
 
@@ -446,7 +471,7 @@ export const AiHub = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={projectionChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                      <linearGradient id="colorDemand" x1="0" y1="0" x2="0" y2="1">
+                      <linearGradient id="colorStock" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#6366f1" stopOpacity={0.4} />
                         <stop offset="95%" stopColor="#6366f1" stopOpacity={0.0} />
                       </linearGradient>
@@ -463,14 +488,15 @@ export const AiHub = () => {
                         color: '#fff',
                       }}
                     />
+                    <ReferenceLine y={reorderThreshold} stroke="#f59e0b" strokeDasharray="3 3" label={{ value: 'Safety Threshold', fill: '#f59e0b', fontSize: 10, position: 'insideTopRight' }} />
                     <Area
                       type="monotone"
-                      dataKey="projectedDemand"
+                      dataKey="remainingStock"
                       stroke="#6366f1"
                       strokeWidth={2}
                       fillOpacity={1}
-                      fill="url(#colorDemand)"
-                      name="Remaining Stock Trajectory"
+                      fill="url(#colorStock)"
+                      name="Projected Remaining Stock"
                     />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -478,113 +504,17 @@ export const AiHub = () => {
 
               {/* AI Written Output */}
               <div className="p-4 rounded-xl bg-slate-950/70 border border-slate-800">
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-2">
-                  <Bot className="w-4 h-4" />
-                  <span>AI Forecast Engine Output:</span>
+                <div className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 mb-2 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>AI Predictive Telemetry Result</span>
                 </div>
-                <div className="text-xs text-slate-300 font-mono whitespace-pre-wrap leading-relaxed">
-                  {forecastResult ||
-                    'Select a product and timeframe, then click "Generate AI Demand Forecast" to view predicted stockouts, run-out date, and minimum replenishment order units.'}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ================= TAB 3: AI PURCHASE RECOMMENDATION GENERATOR ================= */}
-      {activeTab === 'BUDGET' && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-6 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-5 h-5 text-emerald-400" />
-                <h3 className="text-base font-bold text-white">Budget Capital Allocator</h3>
-              </div>
-              <p className="text-xs text-slate-400 mb-6">
-                Provide your available replenishment budget, and our AI will compute the mathematically optimal purchase order distribution.
-              </p>
-
-              <form onSubmit={handleGenerateRecommendation} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5 uppercase tracking-wider">
-                    Total Procurement Budget ($)
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-3 text-slate-500 font-mono text-sm">$</span>
-                    <input
-                      type="number"
-                      required
-                      value={budgetAmount}
-                      onChange={(e) => setBudgetAmount(e.target.value)}
-                      placeholder="25000"
-                      className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-sm font-mono text-white focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  {['10000', '25000', '50000', '100000'].map((preset) => (
-                    <button
-                      key={preset}
-                      type="button"
-                      onClick={() => setBudgetAmount(preset)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 text-[11px] font-mono text-slate-400 hover:text-white hover:border-slate-700"
-                    >
-                      ${parseInt(preset, 10).toLocaleString()}
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={budgetLoading}
-                  className="w-full mt-4 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
-                >
-                  {budgetLoading ? (
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      <Sparkles className="w-4 h-4 text-emerald-200" />
-                      <span>Generate Order Allocation</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-slate-500 flex items-center gap-1.5">
-              <Lightbulb className="w-3.5 h-3.5 text-amber-400" />
-              <span>Prioritizes products with critical shortages & high margins</span>
-            </div>
-          </div>
-
-          <div className="lg:col-span-2 rounded-2xl bg-slate-900/80 border border-slate-800 p-6 flex flex-col justify-between">
-            <div>
-              <h3 className="text-base font-bold text-white mb-1 flex items-center gap-2">
-                <CheckCircle className="w-4 h-4 text-emerald-400" />
-                Priority-Ranked Purchase Allocation Plan
-              </h3>
-              <p className="text-xs text-slate-400 mb-6">
-                Target allocation breakdown optimized to maximize inventory uptime within specified cash limit
-              </p>
-
-              <div className="p-5 rounded-xl bg-slate-950/80 border border-slate-800 min-h-[320px]">
-                {recommendationResult ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
-                      <span className="font-semibold text-emerald-400">Optimization Report Generated</span>
-                      <span className="font-mono text-slate-400">Budget: ${parseFloat(budgetAmount).toLocaleString()}</span>
-                    </div>
-                    <pre className="text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed">
-                      {recommendationResult}
-                    </pre>
+                {forecastResult ? (
+                  <div className="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed">
+                    {forecastResult}
                   </div>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center py-16 text-center text-slate-500 text-xs">
-                    <DollarSign className="w-10 h-10 mb-3 opacity-40 text-emerald-400" />
-                    <p className="font-medium text-slate-400">No budget allocation simulated yet</p>
-                    <p className="text-slate-600 mt-1">Specify your procurement budget on the left and click "Generate Order Allocation".</p>
+                  <div className="text-xs text-slate-500 italic">
+                    Select a product and click "Generate AI Demand Forecast" to view predictive telemetry analysis.
                   </div>
                 )}
               </div>
@@ -593,55 +523,127 @@ export const AiHub = () => {
         </div>
       )}
 
+      {/* ================= TAB 3: PURCHASE RECOMMENDATION ADVISOR ================= */}
+      {activeTab === 'BUDGET' && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-6">
+            <div className="flex items-center gap-2.5 mb-4">
+              <div className="w-8 h-8 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <DollarSign className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-white">Smart PO Allocator</h3>
+                <p className="text-[11px] text-slate-400">Budget optimization algorithms</p>
+              </div>
+            </div>
+
+            <form onSubmit={handleGenerateRecommendation} className="space-y-4">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Available Procurement Budget ($)
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3.5 top-3 text-slate-500 text-xs">$</span>
+                  <input
+                    type="number"
+                    value={budgetAmount}
+                    onChange={(e) => setBudgetAmount(e.target.value)}
+                    placeholder="25000"
+                    className="w-full pl-8 pr-4 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                {[10000, 25000, 50000].map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setBudgetAmount(amt.toString())}
+                    className="py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] text-slate-400 hover:text-white"
+                  >
+                    ${amt.toLocaleString()}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="submit"
+                disabled={budgetLoading}
+                className="w-full mt-4 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-xs shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+              >
+                {budgetLoading ? (
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                ) : (
+                  <>
+                    <Lightbulb className="w-4 h-4 text-emerald-200" />
+                    <span>Generate Purchase Allocation</span>
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          <div className="lg:col-span-2 rounded-2xl bg-slate-900/80 border border-slate-800 p-6">
+            <h3 className="text-sm font-bold text-white mb-2 flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-400" />
+              Optimal Procurement & Supplier Allocation Plan
+            </h3>
+            <p className="text-xs text-slate-400 mb-6">Algorithm prioritizes critical low-stock items while staying strictly within capital constraints</p>
+
+            <div className="p-5 rounded-xl bg-slate-950/70 border border-slate-800 min-h-[280px]">
+              {recommendationResult ? (
+                <div className="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed font-mono">
+                  {recommendationResult}
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500 italic flex items-center justify-center h-48">
+                  Enter budget and click "Generate Purchase Allocation" to calculate optimal order quantities.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ================= TAB 4: STOCK OPTIMIZATION ASSISTANT ================= */}
       {activeTab === 'OPTIMIZE' && (
         <div className="rounded-2xl bg-slate-900/80 border border-slate-800 p-8 space-y-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-slate-800">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-800">
             <div>
-              <div className="flex items-center gap-2">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
                 <Activity className="w-5 h-5 text-indigo-400" />
-                <h3 className="text-lg font-bold text-white">Warehouse Health & Cost Optimization Assistant</h3>
-              </div>
+                Warehouse Stock Optimization & Capital Efficiency Report
+              </h3>
               <p className="text-xs text-slate-400 mt-1">
-                Scans entire warehouse inventory for dead stock, excess holding fees, safety buffer anomalies, and capital lockup
+                Full-warehouse audit detecting dead stock, capital lockup, and critical shortages
               </p>
             </div>
 
             <button
               onClick={handleRunOptimization}
               disabled={optimizeLoading}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2 transition-all disabled:opacity-50 flex-shrink-0"
+              className="py-2.5 px-5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 flex items-center gap-2 transition-all disabled:opacity-50"
             >
               {optimizeLoading ? (
                 <RefreshCw className="w-4 h-4 animate-spin" />
               ) : (
                 <>
                   <Sparkles className="w-4 h-4 text-emerald-300" />
-                  <span>Run 1-Click Warehouse Health Audit</span>
+                  <span>Run Warehouse Audit</span>
                 </>
               )}
             </button>
           </div>
 
-          {/* Report Display */}
-          <div className="p-6 rounded-2xl bg-slate-950/80 border border-slate-800 min-h-[300px]">
+          <div className="p-6 rounded-2xl bg-slate-950/70 border border-slate-800">
             {optimizationResult ? (
-              <div>
-                <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 mb-4 pb-3 border-b border-slate-800">
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Warehouse Audit Complete — AI Supply Chain Health Telemetry:</span>
-                </div>
-                <div className="text-xs font-mono text-slate-200 whitespace-pre-wrap leading-relaxed">
-                  {optimizationResult}
-                </div>
+              <div className="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed font-sans">
+                {optimizationResult}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-center text-slate-500 text-xs">
-                <Cpu className="w-12 h-12 mb-3 text-indigo-500/50" />
-                <p className="font-semibold text-slate-300 text-sm">Ready to audit inventory health</p>
-                <p className="text-slate-500 mt-1 max-w-md">
-                  Click the "Run 1-Click Warehouse Health Audit" button above to evaluate stock turn rates, identify dormant inventory, and calculate potential holding cost savings.
-                </p>
+              <div className="text-xs text-slate-500 italic py-12 text-center">
+                Click "Run Warehouse Audit" to scan your active inventory and generate optimization strategies.
               </div>
             )}
           </div>

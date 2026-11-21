@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -68,8 +67,8 @@ public class AiService {
                     .user(prompt)
                     .call()
                     .content();
-        } catch (Exception e) {
-            log.warn("Spring AI call fell back to deterministic calculation: {}", e.getMessage());
+        } catch (Exception ex) {
+            log.warn("Spring AI call fell back to deterministic calculation: {}", ex.getMessage());
             int avgDemand = Math.max(5, (days / 7) * 6);
             boolean restockNeeded = product.getQuantity() <= product.getReorderLevel() || product.getQuantity() < avgDemand;
             int orderQty = restockNeeded ? Math.max(20, (avgDemand * 2) - product.getQuantity()) : 0;
@@ -114,7 +113,7 @@ public class AiService {
                     .user(prompt)
                     .call()
                     .content();
-        } catch (Exception e) {
+        } catch (Exception ex) {
             long lowStockCount = products.stream().filter(p -> p.getQuantity() <= p.getReorderLevel()).count();
             long overstockedCount = products.stream().filter(p -> p.getQuantity() > (p.getReorderLevel() * 3)).count();
 
@@ -156,7 +155,7 @@ public class AiService {
                     .user(prompt)
                     .call()
                     .content();
-        } catch (Exception e) {
+        } catch (Exception ex) {
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("[AI Purchase Order Recommendation (Budget: $%.2f)]\n", budget));
             double remainingBudget = budget;
@@ -182,6 +181,7 @@ public class AiService {
     public String naturalLanguageQuery(String question) {
         List<Product> products = productRepository.findAll();
         List<Supplier> suppliers = supplierRepository.findAll();
+        List<StockTransaction> allTransactions = transactionRepository.findAll();
 
         String inventoryData = products.stream()
                 .map(p -> String.format("Name: %s, SKU: %s, Category: %s, Stock: %d, Price: $%.2f, Reorder Level: %d",
@@ -205,7 +205,7 @@ public class AiService {
                     .user(prompt)
                     .call()
                     .content();
-        } catch (Exception e) {
+        } catch (Exception ex) {
             String q = question.toLowerCase().trim();
 
             // Intent 1: Greetings & Intro
@@ -213,13 +213,45 @@ public class AiService {
                 return "[AI Assistant] Hello! I am your AI Inventory & Supply Chain Intelligence Engine. " +
                         "I am actively monitoring " + products.size() + " products and " + suppliers.size() + " suppliers in your Aiven SQL warehouse. " +
                         "Try asking me:\n" +
+                        "• 'What items are selling fast?'\n" +
                         "• 'Which products are running low?'\n" +
                         "• 'Summarize warehouse holding value'\n" +
                         "• 'Which suppliers have fastest fulfillment?'\n" +
                         "• 'Breakdown inventory by category'";
             }
 
-            // Intent 2: Low Stock & Restocking Shortages
+            // Intent 2: Fast Selling / Top Selling / Velocity
+            if (q.contains("fast") || q.contains("selling") || q.contains("popular") || q.contains("top selling") || q.contains("velocity") || q.contains("sales")) {
+                // Group OUT transactions by product
+                Map<String, Integer> salesByProduct = allTransactions.stream()
+                        .filter(t -> t.getType() == StockTransaction.TransactionType.OUT && t.getProduct() != null)
+                        .collect(Collectors.groupingBy(
+                                t -> t.getProduct().getName(),
+                                Collectors.summingInt(StockTransaction::getQuantity)
+                        ));
+
+                if (salesByProduct.isEmpty()) {
+                    return "[AI Sales Velocity Analysis] No sales transactions recorded yet. As customer orders (Stock-Out) are fulfilled, velocity rankings will appear here!";
+                }
+
+                // Sort descending by units sold
+                List<Map.Entry<String, Integer>> topSelling = salesByProduct.entrySet().stream()
+                        .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                        .limit(5)
+                        .toList();
+
+                StringBuilder sb = new StringBuilder();
+                sb.append("[AI High-Velocity Sales Analytics]\n");
+                sb.append("Based on historical Stock-Out telemetry, here are your fastest-moving products:\n");
+                int rank = 1;
+                for (Map.Entry<String, Integer> entry : topSelling) {
+                    sb.append(String.format("• Rank %d: %s (%,d units fulfilled)\n", rank++, entry.getKey(), entry.getValue()));
+                }
+                sb.append("💡 Recommendation: Maintain elevated safety stock buffers on these items to prevent sudden stockouts.");
+                return sb.toString();
+            }
+
+            // Intent 3: Low Stock & Restocking Shortages
             if (q.contains("low") || q.contains("restock") || q.contains("shortage") || q.contains("out of stock") || q.contains("reorder")) {
                 List<Product> low = products.stream().filter(p -> p.getQuantity() <= p.getReorderLevel()).toList();
                 if (low.isEmpty()) {
@@ -231,7 +263,7 @@ public class AiService {
                 return String.format("[AI Critical Stock Alert] %d items have dropped below safety thresholds:\n%s\nRecommendation: Trigger emergency purchase orders immediately.", low.size(), items);
             }
 
-            // Intent 3: Warehouse Valuation & Holding Value
+            // Intent 4: Warehouse Valuation & Holding Value
             if (q.contains("value") || q.contains("worth") || q.contains("valuation") || q.contains("cost") || q.contains("holding")) {
                 double totalValue = products.stream()
                         .mapToDouble(p -> p.getPrice().doubleValue() * p.getQuantity())
@@ -252,7 +284,7 @@ public class AiService {
                         mostValuable != null ? mostValuable.getPrice().doubleValue() * mostValuable.getQuantity() : 0.0);
             }
 
-            // Intent 4: Suppliers & Fulfillment Performance
+            // Intent 5: Suppliers & Fulfillment Performance
             if (q.contains("supplier") || q.contains("fulfillment") || q.contains("vendor") || q.contains("delivery") || q.contains("partner")) {
                 if (suppliers.isEmpty()) {
                     return "[AI Supplier Intelligence] No suppliers currently on record. Add suppliers in the Suppliers tab.";
@@ -269,12 +301,12 @@ public class AiService {
                         """, suppliers.size(), supplierList);
             }
 
-            // Intent 5: Categories Breakdown
+            // Intent 6: Categories Breakdown
             if (q.contains("category") || q.contains("categories") || q.contains("type") || q.contains("department")) {
                 Map<String, Long> categoryCount = products.stream()
                         .collect(Collectors.groupingBy(p -> p.getCategory() != null ? p.getCategory() : "General", Collectors.counting()));
                 String breakdown = categoryCount.entrySet().stream()
-                        .map(e -> String.format("• %s: %d SKUs", e.getKey(), e.getValue()))
+                        .map(entry -> String.format("• %s: %d SKUs", entry.getKey(), entry.getValue()))
                         .collect(Collectors.joining("\n"));
                 return "[AI Category Breakdown]\n" + breakdown;
             }
@@ -285,7 +317,7 @@ public class AiService {
                     • Active SKUs Monitored: %d products across %d categories
                     • Connected Vendors: %d verified suppliers
                     • Query processed: "%s"
-                    • Recommendation: Ask about stock health, warehouse valuation, or vendor terms for deeper telemetry insights.
+                    • Recommendation: Ask about fast-selling items, stock health, warehouse valuation, or vendor terms for deeper telemetry insights.
                     """, products.size(), products.stream().map(Product::getCategory).distinct().count(), suppliers.size(), question);
         }
     }
