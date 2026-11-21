@@ -16,3 +16,4 @@ echo ============================================================
 echo   DONE! Your pom.xml and configs are restored to the working version.
 echo ============================================================
 pause
+
