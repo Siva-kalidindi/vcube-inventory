@@ -1,5 +1,6 @@
 package com.vcube.inventory.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +27,7 @@ public class Supplier {
     private LocalDateTime createdAt = LocalDateTime.now();
 
     @OneToMany(mappedBy = "supplier")
+    @JsonIgnore
     private List<Product> products;
 
     public Supplier() {}

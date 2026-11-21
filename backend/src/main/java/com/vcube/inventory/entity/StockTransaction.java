@@ -1,5 +1,6 @@
 package com.vcube.inventory.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -13,6 +14,7 @@ public class StockTransaction {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "product_id", nullable = false)
+    @JsonIgnoreProperties({"supplier"})
     private Product product;
 
     @Enumerated(EnumType.STRING)
@@ -24,6 +26,7 @@ public class StockTransaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reference_order_id")
+    @JsonIgnoreProperties({"supplier"})
     private PurchaseOrder referenceOrder;
 
     @Column(columnDefinition = "TEXT")
