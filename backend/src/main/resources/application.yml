@@ -3,12 +3,12 @@ spring:
     name: inventory-backend
 
   # ============================================================
-  # DATABASE — Setup Person: replace these with Aiven credentials
+  # DATABASE — Aiven Cloud MySQL Configuration
   # ============================================================
   datasource:
-    url: ${DB_URL:jdbc:mysql://localhost:3306/inventory_db}
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:root}
+    url: jdbc:mysql://mysql-380c5520-vcube-inventory-management.d.aivencloud.com:24689/defaultdb?sslMode=REQUIRED
+    username: avnadmin
+    password: AVNS_jLHo56Iw3IyQk2SWmJq
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -20,15 +20,13 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
-  # Prevent data.sql from running every restart (run it manually once)
+  # Set to always so seed data runs and populates the DB with initial data
   sql:
     init:
-      mode: never
+      mode: always
 
   # ============================================================
-  # AI — AI Person: set your OpenAI key as environment variable
-  # In IntelliJ: Run → Edit Configurations → Environment Variables
-  # Add: OPENAI_API_KEY=sk-your-key-here
+  # AI — AI Person: replace with OpenAI Key when available
   # ============================================================
   ai:
     openai:
@@ -39,7 +37,7 @@ spring:
           temperature: 0.7
 
 # ============================================================
-# JWT — Don't change this, it works as-is
+# JWT Configuration
 # ============================================================
 jwt:
   secret: vcube-hack-quest-2026-super-secret-key-that-is-at-least-256-bits-long-for-hs256
