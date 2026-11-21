@@ -8,61 +8,38 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# ===== Maven =====
-.mvn/
-mvnw
-mvnw.cmd
+# ===== Whitelist Bundled Maven (Do not ignore Maven JARs) =====
+!apache-maven-*/**
+!apache-maven-*/**/*.jar
 
 # ===== IDE =====
-# IntelliJ
 .idea/
 *.iml
 *.iws
 out/
-
-# VS Code
 .vscode/
 *.code-workspace
-
-# Eclipse
 .classpath
 .project
 .settings/
-
-# NetBeans
 nbproject/
 build/
-nbbuild/
-nbdist/
 
 # ===== OS Files =====
 .DS_Store
-.DS_Store?
 Thumbs.db
-ehthumbs.db
 Desktop.ini
 
 # ===== Node / React =====
 frontend/node_modules/
 frontend/build/
 frontend/dist/
-frontend/.env
 frontend/.env.local
-frontend/.env.production
 
 # ===== Environment & Secrets =====
 .env
-*.env
 *.env.local
-*.env.production
-*.env.development
 
 # ===== Logs =====
 *.log
 logs/
-
-# ===== Temp =====
-*.tmp
-*.bak
-*.swp
-*~
