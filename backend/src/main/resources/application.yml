@@ -29,7 +29,7 @@ spring:
   # ============================================================
   ai:
     openai:
-      api-key: 
+      api-key: ${OPENAI_API_KEY:sk-proj-zlyfYtVYiW91aQjuNtVkMkDV5xjz8yA8KRVZIjDS9Jo6utqGfrqpVqktHE_TGi5VVtILXU_0xCT3BlbkFJyEYZ0uRgLT9b86cRdbNrlvfOnFczVyTpEu_PV0NCD8bxrwcrConD2mfqjLZITgEPrWQASUDUA}
       chat:
         options:
           model: gpt-3.5-turbo
