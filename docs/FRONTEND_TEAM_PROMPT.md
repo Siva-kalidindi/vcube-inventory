@@ -155,3 +155,4 @@ You are a senior React developer building the UI for an "AI-Powered Smart Invent
 2. Build the app with clean, responsive, dark/light modern UI.
 3. Start dev server: `npm run dev` (Runs on `http://localhost:5173`).
 ```
+
