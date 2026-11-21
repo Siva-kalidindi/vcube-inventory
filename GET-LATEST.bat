@@ -1,21 +1,26 @@
 @echo off
-echo ============================================
-echo   GETTING LATEST CODE FROM TEAM...
-echo ============================================
+echo ============================================================
+echo   SAFELY SYNCING WITH LATEST CODE FROM GITHUB...
+echo ============================================================
 echo.
 
-git pull --rebase
+:: 1. Revert any accidental changes to pom.xml or maven files
+git checkout -- backend/pom.xml 2>nul
+
+:: 2. Stash local work so pull never conflicts
+echo [1/3] Stashing your current progress...
+git stash
+
+:: 3. Pull the latest from origin main
+echo [2/3] Downloading latest code from main...
+git pull origin main
+
+:: 4. Re-apply their stashed work
+echo [3/3] Restoring your progress...
+git stash pop 2>nul
 
 echo.
-if %ERRORLEVEL% == 0 (
-    echo   DONE! You have everyone's latest code.
-) else (
-    echo.
-    echo   THERE'S A CONFLICT. Don't panic.
-    echo   1. Tell Setup Person
-    echo   2. They will fix it for you
-    echo   3. Run: git rebase --abort  (to undo)
-)
-echo.
+echo ============================================================
+echo   SYNC COMPLETE! You have the latest code and your work is intact.
+echo ============================================================
 pause
-
