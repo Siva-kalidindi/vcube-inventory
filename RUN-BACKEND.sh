@@ -10,13 +10,11 @@ chmod +x "$BUNDLED_MVN" 2>/dev/null
 
 cd "$DIR/backend"
 
-if [ ! -f "target/inventory-0.0.1-SNAPSHOT.jar" ]; then
-    echo "[1/2] Packaging backend JAR..."
-    if [ -f "$BUNDLED_MVN" ]; then
-        "$BUNDLED_MVN" clean package -DskipTests
-    else
-        mvn clean package -DskipTests
-    fi
+echo "[1/2] Building latest backend JAR..."
+if [ -f "$BUNDLED_MVN" ]; then
+    "$BUNDLED_MVN" package -DskipTests
+else
+    mvn package -DskipTests
 fi
 
 echo ""

@@ -20,13 +20,13 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
         format_sql: true
 
-  # Set to always so seed data runs and populates the DB with initial data
+  # Disabled so data.sql doesn't cause startup collisions
   sql:
     init:
-      mode: always
+      mode: never
 
   # ============================================================
-  # AI — AI Person: replace with OpenAI Key when available
+  # AI — OpenAI Integration
   # ============================================================
   ai:
     openai:
