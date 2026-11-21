@@ -4,7 +4,6 @@ import com.vcube.inventory.entity.Product;
 import com.vcube.inventory.entity.StockTransaction;
 import com.vcube.inventory.repository.ProductRepository;
 import com.vcube.inventory.service.StockService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,11 +12,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/stock-transactions")
-@RequiredArgsConstructor
 public class StockController {
 
     private final StockService stockService;
     private final ProductRepository productRepository;
+
+    public StockController(StockService stockService, ProductRepository productRepository) {
+        this.stockService = stockService;
+        this.productRepository = productRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<StockTransaction>> getAllTransactions() {
@@ -51,4 +54,3 @@ public class StockController {
         return ResponseEntity.ok(stockService.getRecentTransactions(limit));
     }
 }
-

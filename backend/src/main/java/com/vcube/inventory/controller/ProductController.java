@@ -4,7 +4,6 @@ import com.vcube.inventory.entity.Product;
 import com.vcube.inventory.entity.Supplier;
 import com.vcube.inventory.repository.SupplierRepository;
 import com.vcube.inventory.service.ProductService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,11 +12,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/products")
-@RequiredArgsConstructor
 public class ProductController {
 
     private final ProductService productService;
     private final SupplierRepository supplierRepository;
+
+    public ProductController(ProductService productService, SupplierRepository supplierRepository) {
+        this.productService = productService;
+        this.supplierRepository = supplierRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
@@ -65,4 +68,3 @@ public class ProductController {
         return ResponseEntity.ok(productService.getLowStockProducts());
     }
 }
-

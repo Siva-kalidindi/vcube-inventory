@@ -4,7 +4,6 @@ import com.vcube.inventory.entity.PurchaseOrder;
 import com.vcube.inventory.entity.Supplier;
 import com.vcube.inventory.repository.SupplierRepository;
 import com.vcube.inventory.service.PurchaseOrderService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,11 +13,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/purchase-orders")
-@RequiredArgsConstructor
 public class PurchaseOrderController {
 
     private final PurchaseOrderService purchaseOrderService;
     private final SupplierRepository supplierRepository;
+
+    public PurchaseOrderController(PurchaseOrderService purchaseOrderService, SupplierRepository supplierRepository) {
+        this.purchaseOrderService = purchaseOrderService;
+        this.supplierRepository = supplierRepository;
+    }
 
     @GetMapping
     public ResponseEntity<List<PurchaseOrder>> getAllOrders() {
@@ -60,4 +63,3 @@ public class PurchaseOrderController {
         return ResponseEntity.noContent().build();
     }
 }
-

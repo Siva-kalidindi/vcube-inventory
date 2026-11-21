@@ -2,7 +2,6 @@ package com.vcube.inventory.controller;
 
 import com.vcube.inventory.entity.Supplier;
 import com.vcube.inventory.service.SupplierService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,10 +9,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/suppliers")
-@RequiredArgsConstructor
 public class SupplierController {
 
     private final SupplierService supplierService;
+
+    public SupplierController(SupplierService supplierService) {
+        this.supplierService = supplierService;
+    }
 
     @GetMapping
     public ResponseEntity<List<Supplier>> getAllSuppliers() {
@@ -41,4 +43,3 @@ public class SupplierController {
         return ResponseEntity.noContent().build();
     }
 }
-

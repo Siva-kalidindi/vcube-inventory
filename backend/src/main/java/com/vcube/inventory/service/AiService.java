@@ -4,7 +4,6 @@ import com.vcube.inventory.entity.Product;
 import com.vcube.inventory.entity.StockTransaction;
 import com.vcube.inventory.repository.ProductRepository;
 import com.vcube.inventory.repository.StockTransactionRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -12,17 +11,20 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class AiService {
 
     private final ChatClient.Builder chatClientBuilder;
     private final ProductRepository productRepository;
     private final StockTransactionRepository transactionRepository;
 
-    /**
-     * AI Feature 1: Demand Forecasting
-     * Takes a product and its transaction history, asks AI to predict future demand.
-     */
+    public AiService(ChatClient.Builder chatClientBuilder,
+                     ProductRepository productRepository,
+                     StockTransactionRepository transactionRepository) {
+        this.chatClientBuilder = chatClientBuilder;
+        this.productRepository = productRepository;
+        this.transactionRepository = transactionRepository;
+    }
+
     public String demandForecast(Long productId, int days) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -61,10 +63,6 @@ public class AiService {
                 .content();
     }
 
-    /**
-     * AI Feature 2: Stock Optimization
-     * Analyzes all products and suggests optimization strategies.
-     */
     public String stockOptimization() {
         List<Product> products = productRepository.findAll();
 
@@ -95,10 +93,6 @@ public class AiService {
                 .content();
     }
 
-    /**
-     * AI Feature 3: Purchase Recommendation
-     * Suggests what to buy given a budget.
-     */
     public String purchaseRecommendation(Double budget) {
         List<Product> lowStock = productRepository.findLowStockProducts();
 
@@ -130,10 +124,6 @@ public class AiService {
                 .content();
     }
 
-    /**
-     * AI Feature 4: Natural Language Query
-     * User asks questions about inventory in plain English.
-     */
     public String naturalLanguageQuery(String question) {
         List<Product> products = productRepository.findAll();
 
@@ -161,4 +151,3 @@ public class AiService {
                 .content();
     }
 }
-

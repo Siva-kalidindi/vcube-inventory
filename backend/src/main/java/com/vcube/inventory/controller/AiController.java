@@ -3,16 +3,18 @@ package com.vcube.inventory.controller;
 import com.vcube.inventory.dto.AiRequest;
 import com.vcube.inventory.dto.AiResponse;
 import com.vcube.inventory.service.AiService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/ai")
-@RequiredArgsConstructor
 public class AiController {
 
     private final AiService aiService;
+
+    public AiController(AiService aiService) {
+        this.aiService = aiService;
+    }
 
     @PostMapping("/demand-forecast")
     public ResponseEntity<AiResponse> demandForecast(@RequestBody AiRequest request) {
@@ -43,4 +45,3 @@ public class AiController {
         return ResponseEntity.ok(new AiResponse(result));
     }
 }
-

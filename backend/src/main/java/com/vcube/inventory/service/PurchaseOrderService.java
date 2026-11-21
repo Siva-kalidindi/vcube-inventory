@@ -1,19 +1,18 @@
 package com.vcube.inventory.service;
 
 import com.vcube.inventory.entity.PurchaseOrder;
-import com.vcube.inventory.entity.Supplier;
 import com.vcube.inventory.repository.PurchaseOrderRepository;
-import com.vcube.inventory.repository.SupplierRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class PurchaseOrderService {
 
     private final PurchaseOrderRepository purchaseOrderRepository;
-    private final SupplierRepository supplierRepository;
+
+    public PurchaseOrderService(PurchaseOrderRepository purchaseOrderRepository) {
+        this.purchaseOrderRepository = purchaseOrderRepository;
+    }
 
     public List<PurchaseOrder> getAllOrders() {
         return purchaseOrderRepository.findAll();
@@ -42,4 +41,3 @@ public class PurchaseOrderService {
         return purchaseOrderRepository.findBySupplierId(supplierId);
     }
 }
-

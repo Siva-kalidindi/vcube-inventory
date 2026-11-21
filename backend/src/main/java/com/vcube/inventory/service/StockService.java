@@ -4,18 +4,21 @@ import com.vcube.inventory.entity.Product;
 import com.vcube.inventory.entity.StockTransaction;
 import com.vcube.inventory.repository.ProductRepository;
 import com.vcube.inventory.repository.StockTransactionRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class StockService {
 
     private final StockTransactionRepository transactionRepository;
     private final ProductRepository productRepository;
+
+    public StockService(StockTransactionRepository transactionRepository, ProductRepository productRepository) {
+        this.transactionRepository = transactionRepository;
+        this.productRepository = productRepository;
+    }
 
     public List<StockTransaction> getAllTransactions() {
         return transactionRepository.findAll();
@@ -27,7 +30,6 @@ public class StockService {
 
     @Transactional
     public StockTransaction createTransaction(StockTransaction transaction) {
-        // Update product quantity
         Product product = transaction.getProduct();
         if (transaction.getType() == StockTransaction.TransactionType.IN) {
             product.setQuantity(product.getQuantity() + transaction.getQuantity());
@@ -42,4 +44,3 @@ public class StockService {
         return transactionRepository.findRecentTransactions(PageRequest.of(0, limit));
     }
 }
-

@@ -1,15 +1,10 @@
 package com.vcube.inventory.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "stock_transactions")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class StockTransaction {
 
     @Id
@@ -29,18 +24,38 @@ public class StockTransaction {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reference_order_id")
-    @ToString.Exclude
     private PurchaseOrder referenceOrder;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
 
     @Column(name = "created_at")
-    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
 
     public enum TransactionType {
         IN, OUT
     }
-}
 
+    public StockTransaction() {}
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public Product getProduct() { return product; }
+    public void setProduct(Product product) { this.product = product; }
+
+    public TransactionType getType() { return type; }
+    public void setType(TransactionType type) { this.type = type; }
+
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+
+    public PurchaseOrder getReferenceOrder() { return referenceOrder; }
+    public void setReferenceOrder(PurchaseOrder referenceOrder) { this.referenceOrder = referenceOrder; }
+
+    public String getNotes() { return notes; }
+    public void setNotes(String notes) { this.notes = notes; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+}

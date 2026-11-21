@@ -2,15 +2,17 @@ package com.vcube.inventory.service;
 
 import com.vcube.inventory.entity.Supplier;
 import com.vcube.inventory.repository.SupplierRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class SupplierService {
 
     private final SupplierRepository supplierRepository;
+
+    public SupplierService(SupplierRepository supplierRepository) {
+        this.supplierRepository = supplierRepository;
+    }
 
     public List<Supplier> getAllSuppliers() {
         return supplierRepository.findAll();
@@ -38,4 +40,3 @@ public class SupplierService {
         supplierRepository.deleteById(id);
     }
 }
-

@@ -2,15 +2,17 @@ package com.vcube.inventory.service;
 
 import com.vcube.inventory.entity.Product;
 import com.vcube.inventory.repository.ProductRepository;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-@RequiredArgsConstructor
 public class ProductService {
 
     private final ProductRepository productRepository;
+
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
+    }
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
@@ -45,4 +47,3 @@ public class ProductService {
         return productRepository.findLowStockProducts();
     }
 }
-

@@ -2,16 +2,18 @@ package com.vcube.inventory.controller;
 
 import com.vcube.inventory.dto.*;
 import com.vcube.inventory.service.UserService;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
     private final UserService userService;
+
+    public AuthController(UserService userService) {
+        this.userService = userService;
+    }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponse> register(@RequestBody RegisterRequest request) {
@@ -23,4 +25,3 @@ public class AuthController {
         return ResponseEntity.ok(userService.login(request));
     }
 }
-

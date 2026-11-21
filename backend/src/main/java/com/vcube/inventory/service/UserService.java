@@ -4,17 +4,21 @@ import com.vcube.inventory.dto.*;
 import com.vcube.inventory.entity.User;
 import com.vcube.inventory.repository.UserRepository;
 import com.vcube.inventory.security.JwtUtil;
-import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+    }
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -47,4 +51,3 @@ public class UserService {
         return new AuthResponse(token, user.getName(), user.getEmail(), user.getRole().name());
     }
 }
-
