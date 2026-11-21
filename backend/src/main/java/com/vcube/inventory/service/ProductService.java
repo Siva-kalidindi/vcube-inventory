@@ -1,17 +1,22 @@
 package com.vcube.inventory.service;
 
 import com.vcube.inventory.entity.Product;
+import com.vcube.inventory.entity.StockTransaction;
 import com.vcube.inventory.repository.ProductRepository;
+import com.vcube.inventory.repository.StockTransactionRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final StockTransactionRepository transactionRepository;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, StockTransactionRepository transactionRepository) {
         this.productRepository = productRepository;
+        this.transactionRepository = transactionRepository;
     }
 
     public List<Product> getAllProducts() {
@@ -39,7 +44,13 @@ public class ProductService {
         return productRepository.save(product);
     }
 
+    @Transactional
     public void deleteProduct(Long id) {
+        // Delete related stock transactions first to avoid SQL Foreign Key constraint failure
+        List<StockTransaction> relatedTransactions = transactionRepository.findByProductId(id);
+        if (!relatedTransactions.isEmpty()) {
+            transactionRepository.deleteAll(relatedTransactions);
+        }
         productRepository.deleteById(id);
     }
 

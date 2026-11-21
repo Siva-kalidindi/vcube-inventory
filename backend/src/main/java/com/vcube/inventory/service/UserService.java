@@ -7,6 +7,8 @@ import com.vcube.inventory.security.JwtUtil;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class UserService {
 
@@ -22,15 +24,21 @@ public class UserService {
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
-            throw new RuntimeException("Email already registered");
+            throw new RuntimeException("Email already registered: " + request.getEmail());
+        }
+
+        // Security rule: Only the first ever user registered or explicit admin@ email gets ADMIN.
+        // Everyone else defaults to STAFF for enterprise role-based security.
+        User.Role assignedRole = User.Role.STAFF;
+        if (userRepository.count() == 0 || request.getEmail().equalsIgnoreCase("admin@vcube.com")) {
+            assignedRole = User.Role.ADMIN;
         }
 
         User user = User.builder()
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole() != null ?
-                        User.Role.valueOf(request.getRole().toUpperCase()) : User.Role.STAFF)
+                .role(assignedRole)
                 .build();
 
         userRepository.save(user);
@@ -49,5 +57,9 @@ public class UserService {
 
         String token = jwtUtil.generateToken(user.getEmail());
         return new AuthResponse(token, user.getName(), user.getEmail(), user.getRole().name());
+    }
+
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
     }
 }
